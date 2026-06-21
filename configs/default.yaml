@@ -1,0 +1,40 @@
+# Default configuration. Override on the CLI where supported.
+
+paths:
+  data_root: data
+  # TextVQA annotation files (download separately, see scripts/00_download.md)
+  ann:
+    train: data/TextVQA_0.5.1_train.json
+    val:   data/TextVQA_0.5.1_val.json
+    test:  data/TextVQA_0.5.1_test.json
+  # image folders (train_images, test_images from open-images subset)
+  images:
+    train: data/train_images
+    val:   data/train_images   # val images live in the train_images folder for TextVQA 0.5.1
+    test:  data/test_images
+  ocr_cache: outputs/ocr_cache   # one json per split
+  preds:     outputs/preds
+  scores:    outputs/scores
+
+ocr:
+  engine: easyocr        # easyocr | tesseract
+  langs: [en]
+  max_tokens: 50         # cap OCR tokens fed to the reasoner
+  min_confidence: 0.30
+
+vlm:
+  backend: blip2         # blip2 | api
+  blip2_model: Salesforce/blip2-flan-t5-xl
+  api_model: claude-sonnet-4-6     # only used when backend: api
+  max_new_tokens: 16
+
+ocr_first:
+  # backend that turns (question + ocr tokens) into an answer
+  backend: blip2_text    # blip2_text reuses the flan-t5 head as a reader; or 'api'
+  api_model: claude-sonnet-4-6
+  max_new_tokens: 16
+
+eval:
+  limit: 0               # 0 = full split; >0 = smoke test on N samples
+  batch_size: 8
+  device: auto           # auto | cpu | cuda
