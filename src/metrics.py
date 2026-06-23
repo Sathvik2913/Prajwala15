@@ -46,10 +46,25 @@ def anls(pred: str, gt_answers: list[str], tau: float = 0.5) -> float:
     return best
 
 
+def exact_match(pred: str, gt_answers: list[str]) -> float:
+    """1.0 if normalized prediction equals any normalized human answer."""
+    if not gt_answers:
+        return 0.0
+    p = normalize_answer(pred)
+    return 1.0 if any(p == normalize_answer(a) for a in gt_answers) else 0.0
+
+
+def vqa_f1(pred: str, gt_answers: list[str]) -> float:
+    """Exact-match F1 for single-answer-per-question VQA (equals exact match)."""
+    return exact_match(pred, gt_answers)
+
+
 def aggregate(rows: list[dict]) -> dict:
     n = len(rows) or 1
     return {
         "n": len(rows),
         "vqa_accuracy": sum(r["vqa_acc"] for r in rows) / n,
         "anls": sum(r["anls"] for r in rows) / n,
+        "exact_match": sum(r.get("exact_match", 0) for r in rows) / n,
+        "f1": sum(r.get("f1", 0) for r in rows) / n,
     }
