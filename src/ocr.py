@@ -11,6 +11,11 @@ import shutil
 from .preprocess import preprocess_image
 
 
+def _bbox_xyxy(xs, ys) -> list[int]:
+    """JSON-safe bbox [x1, y1, x2, y2] (EasyOCR/Paddle return numpy scalars)."""
+    return [int(min(xs)), int(min(ys)), int(max(xs)), int(max(ys))]
+
+
 class OCREngine:
     def read(self, image: Image.Image) -> list[dict]:
         raise NotImplementedError
@@ -39,7 +44,7 @@ class EasyOCR(OCREngine):
             out.append({
                 "text": text,
                 "conf": float(conf),
-                "bbox": [min(xs), min(ys), max(xs), max(ys)],
+                "bbox": _bbox_xyxy(xs, ys),
             })
         return out
 
@@ -73,7 +78,11 @@ class Tesseract(OCREngine):
                 continue
             conf = float(d["conf"][i]) / 100.0 if d["conf"][i] not in ("-1", -1) else 0.0
             x, y, w, h = d["left"][i], d["top"][i], d["width"][i], d["height"][i]
-            out.append({"text": text, "conf": conf, "bbox": [x, y, x + w, y + h]})
+            out.append({
+                "text": text,
+                "conf": conf,
+                "bbox": [int(x), int(y), int(x + w), int(y + h)],
+            })
         return out
 
 
@@ -101,7 +110,7 @@ class PaddleOCRReader(OCREngine):
             out.append({
                 "text": text,
                 "conf": float(conf),
-                "bbox": [int(min(xs)), int(min(ys)), int(max(xs)), int(max(ys))],
+                "bbox": _bbox_xyxy(xs, ys),
             })
         return out
 
