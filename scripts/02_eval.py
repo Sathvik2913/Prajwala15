@@ -18,16 +18,15 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from tqdm import tqdm
 
-from src.config import load_config, pick_device
+from src.config import load_config, pick_device, ocr_cache_path
 from src.dataset import TextVQADataset
-from src.metrics import aggregate, anls, vqa_accuracy
+from src.metrics import aggregate, anls, exact_match, vqa_accuracy, vqa_f1
 from src.ocr import tokens_to_string
 from src.ocr_quality import coverage_bucket
 
 
-def load_ocr_cache(cfg, split):
-    engine = cfg["ocr"]["engine"]
-    path = os.path.join(cfg["paths"]["ocr_cache"], f"{split}_{engine}.json")
+def load_ocr_cache(cfg, split, engine=None, preprocess=None):
+    path = ocr_cache_path(cfg, split, engine, preprocess)
     if not os.path.exists(path):
         raise FileNotFoundError(
             f"OCR cache missing: {path}. Run scripts/01_run_ocr.py first.")
@@ -41,15 +40,23 @@ def main():
                     choices=["ocr_first", "vlm", "hybrid"])
     ap.add_argument("--split", default="val")
     ap.add_argument("--limit", type=int, default=None)
+    ap.add_argument("--engine", default=None,
+                    help="OCR engine cache to load (default: config ocr.engine)")
+    ap.add_argument("--preprocess", action="store_true",
+                    help="load OCR cache built with --preprocess")
     args = ap.parse_args()
 
     cfg = load_config()
+    if args.preprocess:
+        cfg["ocr"]["preprocess"] = True
+    engine = args.engine or cfg["ocr"]["engine"]
     device = pick_device(cfg["eval"]["device"])
     limit = args.limit if args.limit is not None else cfg["eval"]["limit"]
     ds = TextVQADataset(args.split, cfg, limit=limit)
 
     need_ocr = args.approach in ("ocr_first", "hybrid")
-    ocr_cache = load_ocr_cache(cfg, args.split) if need_ocr else {}
+    ocr_cache = load_ocr_cache(cfg, args.split, engine,
+                               cfg["ocr"].get("preprocess")) if need_ocr else {}
     mt, mc = cfg["ocr"]["max_tokens"], cfg["ocr"]["min_confidence"]
 
     if args.approach == "ocr_first":
@@ -87,6 +94,8 @@ def main():
             "ocr_bucket": bucket,
             "vqa_acc": vqa_accuracy(pred, m["answers"]),
             "anls": anls(pred, m["answers"]),
+            "exact_match": exact_match(pred, m["answers"]),
+            "f1": vqa_f1(pred, m["answers"]),
         })
 
     os.makedirs(cfg["paths"]["preds"], exist_ok=True)

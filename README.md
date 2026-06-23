@@ -38,18 +38,29 @@ textvqa/
 └── outputs/                   # predictions, scores, figures
 ```
 
-## Quick start
+## Quick start (Colab)
+
+Open **`Reading_Text_in_Images.ipynb`** in Google Colab (GPU runtime). All team members run their sections in that single notebook:
+
+| Section | Member | Scripts |
+|---------|--------|---------|
+| OCR + OCR-first baseline + error analysis | Member 1 | `01_run_ocr.py`, `02_eval.py`, `04_ocr_error_analysis.py` |
+| VLM (BLIP-2) | Member 2 | `02_eval.py --approach vlm` |
+| Hybrid + comparison | Member 3 | `02_eval.py --approach hybrid`, `03_analysis.py` |
+
+Local CLI equivalent:
 
 ```bash
 pip install -r requirements.txt
 # 1. download data (see scripts/00_download.md), put under data/
-# 2. cache OCR once (slow):
+# 2. cache OCR once (Member 1):
 python scripts/01_run_ocr.py --split val --engine easyocr
-# 3. evaluate each approach:
+python scripts/01_run_ocr.py --split val --engine easyocr --preprocess
+# 3. evaluate approaches:
 python scripts/02_eval.py --approach ocr_first --split val
+python scripts/04_ocr_error_analysis.py --split val
 python scripts/02_eval.py --approach vlm       --split val
 python scripts/02_eval.py --approach hybrid    --split val
-# 4. compare + analyze:
 python scripts/03_analysis.py --split val
 ```
 

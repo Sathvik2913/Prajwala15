@@ -7,8 +7,11 @@ pandas>=2.0
 pyyaml>=6.0
 tqdm>=4.66
 matplotlib>=3.8
-# OCR engines (install at least one)
-pytesseract>=0.3.10        # also: apt-get install tesseract-ocr
+opencv-python-headless>=4.8
+# OCR engines (install at least one; Colab: easyocr + paddleocr recommended)
+pytesseract>=0.3.10
 easyocr>=1.7.1
-# optional, only if you use the API-based VLM
+paddlepaddle>=2.6.0
+paddleocr>=2.7.0
+# optional API backend
 anthropic>=0.40

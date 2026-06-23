@@ -4,3 +4,10 @@ data/*
 !data/.gitkeep
 outputs/*
 !outputs/.gitkeep
+.venv/
+.tmp/
+.pip_cache/
+.hf_cache/
+.easyocr_models/
+.paddleocr/
+tessdata/
