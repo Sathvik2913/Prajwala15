@@ -101,7 +101,7 @@ class PaddleOCRReader(OCREngine):
             out.append({
                 "text": text,
                 "conf": float(conf),
-                "bbox": [min(xs), min(ys), max(xs), max(ys)],
+                "bbox": [int(min(xs)), int(min(ys)), int(max(xs)), int(max(ys))],
             })
         return out
 
